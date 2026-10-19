@@ -15,20 +15,16 @@ export function render(root, data, { projectsHint }) {
       </div>
     </div>
 
-    <section class="flagship-grid" aria-label="Flagship projects">
-      ${featured.map(f => {
-        const tag = (f.subtitle || f.lang || 'project').split(/\s+/).slice(-1)[0];
-        const metric = f.stars ? `★ ${f.stars}` : (f.lang || '');
-        const blurb = f.tech.length ? f.tech.map(t => t.name).join(' · ') : f.desc;
-        return `
-        <a class="flagship-card" href="${esc(f.url)}" target="_blank" rel="noopener">
-          <div class="fc-top"><span class="fc-tag">${esc(tag.toUpperCase())}</span><span class="fc-metric">${esc(metric)}</span></div>
-          <h3 class="fc-title">${esc(f.name)}${f.subtitle ? ` <span class="fc-sub">${esc(f.subtitle)}</span>` : ''}</h3>
-          <p class="fc-blurb">${esc(blurb)}</p>
+    ${featured.length ? `<section class="flagship-grid" aria-label="Featured projects">
+      ${featured.map(f => `
+        <a class="flagship-card" href="${esc(f.repoUrl)}" target="_blank" rel="noopener">
+          <div class="fc-top"><span class="fc-tag">${esc((f.lang || 'project').toUpperCase())}</span><span class="fc-metric">★ ${f.stars}</span></div>
+          <h3 class="fc-title">${esc(f.name)}</h3>
+          ${f.desc ? `<p class="fc-blurb">${esc(f.desc)}</p>` : ''}
+          ${f.topics.length ? `<p class="fc-topics">${f.topics.slice(0, 6).map(t => `<span>#${esc(t)}</span>`).join('')}</p>` : ''}
           <span class="fc-link">open repo ↗</span>
-        </a>`;
-      }).join('')}
-    </section>
+        </a>`).join('')}
+    </section>` : ''}
 
     <section class="sphere-stage" aria-label="All repositories">
       <div class="sphere-mount"></div>

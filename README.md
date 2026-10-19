@@ -22,8 +22,7 @@ Scheduled workflows pause if the repo has no activity for 60 days. GitHub emails
 | You do this on GitHub | Effect |
 |---|---|
 | Add topic `portfolio` to repos | Once **any** repo has it, **only** tagged repos appear in the sphere |
-| Add topic `featured` | Repo becomes a flagship card at the top |
-| List it under **⭐ LATEST PROJECTS** in your profile README | Also a flagship card, shown first |
+| Add topic `featured` | Repo becomes a flagship card at the top (up to 4, most-starred first). The card shows its description, language, stars and topics |
 | Add a `logo.png` to the repo root | Used as that repo's tile image in the sphere (picked up on the next hourly run) |
 | Upload a **Social preview** (repo Settings → General → Social preview) | Used as the tile image if there's no `logo.png`; the workflow downloads it into `data/repo-images/` |
 
@@ -35,7 +34,6 @@ Keep these `##` headings. Emoji are fine and get stripped automatically:
 
 - `# Hi there! 👋 I'm <Name>`
 - `## About Me`: one paragraph, then `- Label: value` bullets
-- `## Latest Projects`: the 2-column table (`**[Title - Subtitle](url)**<br/>description … badges`)
 - `## Highlights`: header row = titles, second row = text
 - `## Tech Stack`: `**Group**` lines, optional `*Sub:*` lines, then shields.io badges (`logo=` gives the icon)
 - `## Connect With Me`: `<a href="…"><img alt="GitHub" …></a>` links

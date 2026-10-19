@@ -13,8 +13,7 @@ export const CONFIG = {
   // Projects:
   //  • If ANY repo has the `topicShow` topic, only those repos are shown.
   //  • Otherwise every non-fork repo with a description is shown (minus `exclude`).
-  //  • Repos with `topicFeatured`, or listed under "Latest Projects" in the README,
-  //    become the big flagship cards at the top.
+  //  • Repos with the `topicFeatured` topic become the flagship cards at the top (max 4).
   topicShow: 'portfolio',
   topicFeatured: 'featured',
   exclude: ['D1abol1cal', 'Nofel-Portfolio'],

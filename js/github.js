@@ -105,14 +105,13 @@ export function parseReadme(md) {
 }
 
 // ── repos → project list ────────────────────────────────────
-export function selectRepos(repos, featuredFromReadme = []) {
+export function selectRepos(repos) {
   const ex = CONFIG.exclude.map(s => s.toLowerCase());
   let list = repos.filter(r => !r.fork && !ex.includes(r.name.toLowerCase()));
   const tagged = list.filter(r => (r.topics || []).includes(CONFIG.topicShow));
   list = tagged.length ? tagged : list.filter(r => r.description);
 
-  const readmeNames = featuredFromReadme.map(f => (f.url.split('/').pop() || f.name).toLowerCase());
-  const isFeatured = r => (r.topics || []).includes(CONFIG.topicFeatured) || readmeNames.includes(r.name.toLowerCase());
+  const isFeatured = r => (r.topics || []).includes(CONFIG.topicFeatured);
 
   list.sort((a, b) => (isFeatured(b) - isFeatured(a)) || (b.stargazers_count - a.stargazers_count) || (new Date(b.pushed_at) - new Date(a.pushed_at)));
   const norm = r => ({
@@ -206,18 +205,20 @@ export async function loadContent(log = () => {}) {
   const profile = parseReadme(readme);
   log(`parse: ${profile.sections} sections · ${profile.stack.reduce((n, g) => n + g.items.length, 0)} skills`, 'OK');
 
-  const list = selectRepos(repos, profile.featured).map(r => ({ ...r, logo: logos[r.name] || images[r.name] || '' })); // logo.png wins over the social preview
-  // Flagship cards: README "Latest Projects" first, enriched with live repo stats; then topic-featured repos.
-  const byName = Object.fromEntries(list.map(r => [r.name.toLowerCase(), r]));
-  const featured = profile.featured.map(f => {
-    const r = byName[(f.url.split('/').pop() || '').toLowerCase()];
-    return { ...f, repo: r || null, lang: r ? r.lang : '', stars: r ? r.stars : 0 };
-  });
-  for (const r of list) {
-    if (r.featured && !featured.some(f => f.repo && f.repo.name === r.name)) {
-      featured.push({ name: r.name, subtitle: r.lang, url: r.url, desc: r.desc, tech: [], repo: r, lang: r.lang, stars: r.stars });
-    }
-  }
+  const withImage = r => ({ ...r, logo: logos[r.name] || images[r.name] || '' }); // logo.png wins over the social preview
+  const list = selectRepos(repos).map(withImage);
+  // Flagship cards: every non-fork repo with the `featured` topic (whether or not it's tagged `portfolio`),
+  // most-starred first, then most recently pushed.
+  const ex = CONFIG.exclude.map(x => x.toLowerCase());
+  const hidden = [CONFIG.topicShow, CONFIG.topicFeatured];
+  const featured = repos
+    .filter(r => !r.fork && !ex.includes(r.name.toLowerCase()) && (r.topics || []).includes(CONFIG.topicFeatured))
+    .sort((a, b) => (b.stargazers_count - a.stargazers_count) || (new Date(b.pushed_at) - new Date(a.pushed_at)))
+    .map(r => ({
+      name: r.name, url: r.homepage || r.html_url, repoUrl: r.html_url, desc: r.description || '',
+      lang: r.language || '', stars: r.stargazers_count || 0,
+      topics: (r.topics || []).filter(t => !hidden.includes(t)),
+    }));
   log(`mount /projects  ${list.length} repos · ${featured.length} flagship`, 'OK');
   return { profile, repos: list, featured, source };
 }
