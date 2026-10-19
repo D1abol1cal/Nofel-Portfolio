@@ -27,7 +27,9 @@ const FRAG = `
   }`;
 
 // Some brands are no longer on Simple Icons — map README slugs to ones that exist.
-const SLUG_FIX = { amazonaws: 'amazonwebservices', microsoftazure: 'azure', visualstudio: 'visualstudio', intellijidea: 'intellijidea', oracle: 'oracle', windows: 'windows' };
+const SLUG_FIX = { amazonaws: 'amazonwebservices', microsoftazure: 'azure' };
+export const iconUrl = (slug, color = 'white') => `https://cdn.simpleicons.org/${SLUG_FIX[slug] || slug}/${color}`;
+const FONT = '"JetBrains Mono", "Courier New", monospace';
 
 function cardCanvas(item, img) {
   const W = 512, H = 640, c = document.createElement('canvas'); c.width = W; c.height = H;
@@ -39,11 +41,13 @@ function cardCanvas(item, img) {
     const s = 300 / Math.max(img.width, img.height);
     x.drawImage(img, (W - img.width * s) / 2, (512 - img.height * s) / 2, img.width * s, img.height * s);
   } else {
-    x.fillStyle = '#ffffff'; x.font = 'bold 120px "Courier New", monospace';
+    x.fillStyle = '#ffffff'; x.font = `bold 110px ${FONT}`;
     x.textAlign = 'center'; x.textBaseline = 'middle';
-    x.fillText(item.name.replace(/[^A-Za-z0-9+#]/g, '').slice(0, 3).toUpperCase(), W / 2, 256);
+    const short = item.name.replace(/[^A-Za-z0-9+#]/g, '');
+    x.font = `bold ${short.length > 4 ? 84 : 110}px ${FONT}`;
+    x.fillText(short.length > 7 ? short.slice(0, 6) : short, W / 2, 256);
   }
-  x.fillStyle = '#ffffff'; x.font = '34px "Courier New", monospace'; x.textAlign = 'center'; x.textBaseline = 'alphabetic';
+  x.fillStyle = '#ffffff'; x.font = `500 38px ${FONT}`; x.textAlign = 'center'; x.textBaseline = 'alphabetic';
   x.fillText(item.name, W / 2, 600);
   return c;
 }
@@ -67,7 +71,7 @@ export function mountGallery(container, items, { bend = 2, accentFirst = true } 
       const img = new Image(); img.crossOrigin = 'anonymous';
       const color = accentFirst && i === 0 ? '39ff14' : 'white';
       img.onload = () => { tex.image = cardCanvas(it, img); };
-      img.src = `https://cdn.simpleicons.org/${SLUG_FIX[it.slug] || it.slug}/${color}`;
+      img.src = iconUrl(it.slug, color);
     }
     const program = new Program(gl, { vertex: VERT, fragment: FRAG, transparent: true, depthTest: false,
       uniforms: { tMap: { value: tex }, uSpeed: { value: 0 }, uTime: { value: 100 * Math.random() }, uRadius: { value: 0.08 }, uPlane: { value: [1, 1.25] } } });

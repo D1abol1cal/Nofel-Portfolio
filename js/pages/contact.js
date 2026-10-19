@@ -7,6 +7,8 @@ const ICONS = {
   github: { glow: '#a371f7', svg: '<svg viewBox="0 0 24 24"><path fill="#fff" d="M12 .5a11.5 11.5 0 0 0-3.6 22.4c.6.1.8-.3.8-.6v-2c-3.2.7-3.9-1.5-3.9-1.5-.5-1.3-1.3-1.7-1.3-1.7-1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.7-1.6-2.6-.3-5.3-1.3-5.3-5.7 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.2 1.2a11 11 0 0 1 5.8 0c2.2-1.5 3.2-1.2 3.2-1.2.6 1.6.2 2.8.1 3.1.8.8 1.2 1.8 1.2 3.1 0 4.4-2.7 5.4-5.3 5.7.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A11.5 11.5 0 0 0 12 .5z"/></svg>' },
   linkedin: { glow: '#0a66c2', svg: '<svg viewBox="0 0 24 24"><rect width="24" height="24" rx="3" fill="#0a66c2"/><path fill="#fff" d="M5.3 9.2h2.9V19H5.3zM6.8 4.7a1.7 1.7 0 1 1 0 3.4 1.7 1.7 0 0 1 0-3.4zM10.1 9.2h2.8v1.3c.4-.8 1.4-1.6 2.9-1.6 3 0 3.6 2 3.6 4.6V19h-2.9v-4.9c0-1.2 0-2.7-1.6-2.7s-1.9 1.3-1.9 2.6v5h-2.9z"/></svg>' },
   email: { glow: '#ea4335', svg: '<svg viewBox="0 0 24 24"><path fill="#4285f4" d="M2 6.5V18a1.5 1.5 0 0 0 1.5 1.5H7V11l5 3.8z"/><path fill="#34a853" d="M17 19.5h3.5A1.5 1.5 0 0 0 22 18V6.5L17 11z"/><path fill="#fbbc04" d="M17 5.5V11l5-4.5c0-1.6-1.8-2.5-3-1.5z"/><path fill="#ea4335" d="M7 11V5.5l5 3.8 5-3.8V11l-5 3.8z"/><path fill="#c5221f" d="M2 6.5 7 11V5.5L5 4c-1.2-1-3-.1-3 1.5z"/></svg>' },
+  instagram: { glow: '#e1306c', svg: '<svg viewBox="0 0 24 24"><defs><linearGradient id="igg" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#feda75"/><stop offset=".35" stop-color="#fa7e1e"/><stop offset=".6" stop-color="#d62976"/><stop offset=".85" stop-color="#962fbf"/><stop offset="1" stop-color="#4f5bd5"/></linearGradient></defs><rect x="2" y="2" width="20" height="20" rx="6" fill="none" stroke="url(#igg)" stroke-width="2.2"/><circle cx="12" cy="12" r="4.4" fill="none" stroke="url(#igg)" stroke-width="2.2"/><circle cx="17.4" cy="6.6" r="1.4" fill="url(#igg)"/></svg>' },
+  discord: { glow: '#5865f2', svg: '<svg viewBox="0 0 24 24"><path fill="#5865f2" d="M19.6 5.2A17 17 0 0 0 15.4 4l-.5 1.1a15.6 15.6 0 0 0-5.8 0L8.6 4a17 17 0 0 0-4.2 1.3C1.7 9.3 1 13.2 1.3 17.1a17 17 0 0 0 5.2 2.6l1.1-1.8a11 11 0 0 1-1.7-.8l.4-.3a12.2 12.2 0 0 0 10.4 0l.4.3c-.5.3-1.1.6-1.7.8l1.1 1.8a17 17 0 0 0 5.2-2.6c.4-4.5-.7-8.4-3.1-11.9zM8.7 14.7c-1 0-1.9-1-1.9-2.1s.8-2.1 1.9-2.1 1.9 1 1.9 2.1-.8 2.1-1.9 2.1zm6.6 0c-1 0-1.9-1-1.9-2.1s.8-2.1 1.9-2.1 1.9 1 1.9 2.1-.8 2.1-1.9 2.1z"/></svg>' },
   resume: { glow: '#39ff14', svg: '<svg viewBox="0 0 24 24" fill="none" stroke="#39ff14" stroke-width="1.6"><path d="M14 3H6a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8z"/><path d="M14 3v5h5M8 13h8M8 17h5"/></svg>' },
   link: { glow: '#39ff14', svg: '<svg viewBox="0 0 24 24" fill="none" stroke="#39ff14" stroke-width="1.6"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg>' },
 };
@@ -16,6 +18,12 @@ function classify(c) {
   if (u.startsWith('mailto:')) return { kind: 'email', handle: c.url.slice(7), copy: c.url.slice(7) };
   if (u.includes('github.com')) return { kind: 'github', handle: '@' + c.url.replace(/\/$/, '').split('/').pop() };
   if (u.includes('linkedin.com')) return { kind: 'linkedin', handle: c.label === 'LinkedIn' ? 'Syed Nofel Talha' : c.label };
+  if (u.includes('instagram.com')) return { kind: 'instagram', handle: '@' + c.url.replace(/[?#].*$/, '').replace(/\/$/, '').split('/').pop() };
+  if (u.includes('discord') || /^discord/i.test(c.label)) {
+    // handle comes from the badge alt text, e.g. alt="Discord: d1abol1cal" → copy it on click
+    const h = (c.label.match(/discord\s*[:@]\s*(.+)$/i) || [])[1];
+    return h ? { kind: 'discord', handle: '@' + h.trim().replace(/^@/, ''), copy: h.trim().replace(/^@/, '') } : { kind: 'discord', handle: 'Discord' };
+  }
   return { kind: 'link', handle: c.label };
 }
 

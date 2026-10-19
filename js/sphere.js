@@ -45,16 +45,16 @@ function tileCanvas(repo, logo) {
     x.drawImage(logo, (S - w) / 2, 48 + (300 - h) / 2, w, h);
   } else {
     // terminal glyph block
-    x.font = 'bold 150px "Courier New", monospace'; x.textAlign = 'center'; x.textBaseline = 'middle';
+    x.font = 'bold 150px "JetBrains Mono", "Courier New", monospace'; x.textAlign = 'center'; x.textBaseline = 'middle';
     x.fillStyle = '#39ff14'; x.shadowColor = 'rgba(57,255,20,0.6)'; x.shadowBlur = 24;
     const initials = repo.name.replace(/[^A-Za-z0-9]/g, ' ').trim().split(/\s+|(?=[A-Z][a-z])/).slice(0, 2).map(s => s[0]).join('').toUpperCase() || '>_';
     x.fillText(initials, S / 2, 200); x.shadowBlur = 0;
   }
   x.textAlign = 'left'; x.textBaseline = 'alphabetic';
-  x.fillStyle = '#e8ffe8'; x.font = 'bold 34px "Courier New", monospace';
+  x.fillStyle = '#e8ffe8'; x.font = 'bold 34px "JetBrains Mono", "Courier New", monospace';
   const name = repo.name.length > 22 ? repo.name.slice(0, 21) + '…' : repo.name;
   x.fillText(name, 32, 410);
-  x.font = '22px "Courier New", monospace';
+  x.font = '22px "JetBrains Mono", "Courier New", monospace';
   x.fillStyle = LANG_COLORS[repo.lang] || '#9f9';
   x.beginPath(); x.arc(42, 452, 8, 0, Math.PI * 2); x.fill();
   x.fillStyle = '#9f9'; x.fillText(`${repo.lang || 'misc'}   ★ ${repo.stars}`, 60, 460);
