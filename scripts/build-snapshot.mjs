@@ -16,8 +16,10 @@ async function gh(path, accept) {
 }
 
 const readme = await gh(`/repos/${user}/${CONFIG.readmeRepo}/readme`, 'application/vnd.github.raw');
-const repos = await gh(`/users/${user}/repos?per_page=100&sort=pushed`);
-if (!Array.isArray(repos)) throw new Error('unexpected repos payload');
+const all = await gh(`/users/${user}/repos?per_page=100&sort=pushed&type=owner`);
+if (!Array.isArray(all)) throw new Error('unexpected repos payload');
+// Public repos only — this endpoint already returns only public repos, but never let a private one through.
+const repos = all.filter(r => r.private === false && (r.visibility ?? 'public') === 'public');
 
 // Which repos ship a logo.png at their root? (checked here once, so visitors never probe)
 const logos = {};

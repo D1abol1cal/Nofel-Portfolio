@@ -107,7 +107,7 @@ export function parseReadme(md) {
 // ── repos → project list ────────────────────────────────────
 export function selectRepos(repos) {
   const ex = CONFIG.exclude.map(s => s.toLowerCase());
-  let list = repos.filter(r => !r.fork && !ex.includes(r.name.toLowerCase()));
+  let list = repos.filter(r => !r.fork && !r.private && !ex.includes(r.name.toLowerCase()));
   const tagged = list.filter(r => (r.topics || []).includes(CONFIG.topicShow));
   list = tagged.length ? tagged : list.filter(r => r.description);
 
@@ -212,7 +212,7 @@ export async function loadContent(log = () => {}) {
   const ex = CONFIG.exclude.map(x => x.toLowerCase());
   const hidden = [CONFIG.topicShow, CONFIG.topicFeatured];
   const featured = repos
-    .filter(r => !r.fork && !ex.includes(r.name.toLowerCase()) && (r.topics || []).includes(CONFIG.topicFeatured))
+    .filter(r => !r.fork && !r.private && !ex.includes(r.name.toLowerCase()) && (r.topics || []).includes(CONFIG.topicFeatured))
     .sort((a, b) => (b.stargazers_count - a.stargazers_count) || (new Date(b.pushed_at) - new Date(a.pushed_at)))
     .map(r => ({
       name: r.name, url: r.homepage || r.html_url, repoUrl: r.html_url, desc: r.description || '',
