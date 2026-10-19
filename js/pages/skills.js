@@ -41,25 +41,22 @@ export function render(root, data) {
   root.innerHTML = `
   <div class="skills-page">
     <section class="skills-hero" aria-label="Languages">
-      <div class="skills-kicker">// core languages · drag or scroll</div>
       <div class="gallery-mount"></div>
     </section>
 
     <section class="stack-tree" aria-labelledby="tree-h">
       <div class="tree-head">
         <h2 id="tree-h"><span class="prompt">$</span> tree ~/stack</h2>
-        <span class="tree-meta">${total} skills · synced from README</span>
       </div>
       <div class="tree-body">
         <div class="tree-row root"><span class="tree-label">~/stack/</span></div>
         ${rows.map(r => `
         <div class="tree-row${r.sub ? ' sub' : ''}">
           <span class="tree-prefix" aria-hidden="true">${r.prefix}</span>
-          <span class="tree-label">${esc(r.label)}${r.count && !r.items ? ` <i>${r.count}</i>` : ''}</span>
+          <span class="tree-label">${esc(r.label)}</span>
           ${r.items ? `<span class="tree-items">${r.items.map(chip).join('')}</span>` : ''}
         </div>`).join('')}
       </div>
-      <div class="tree-foot">${dirs} directories, ${total} skills</div>
     </section>
   </div>`;
 

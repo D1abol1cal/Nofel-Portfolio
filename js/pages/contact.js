@@ -13,11 +13,11 @@ const ICONS = {
   link: { glow: '#39ff14', svg: '<svg viewBox="0 0 24 24" fill="none" stroke="#39ff14" stroke-width="1.6"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg>' },
 };
 
-function classify(c) {
+function classify(c, name) {
   const u = c.url.toLowerCase();
   if (u.startsWith('mailto:')) return { kind: 'email', handle: c.url.slice(7), copy: c.url.slice(7) };
   if (u.includes('github.com')) return { kind: 'github', handle: '@' + c.url.replace(/\/$/, '').split('/').pop() };
-  if (u.includes('linkedin.com')) return { kind: 'linkedin', handle: c.label === 'LinkedIn' ? 'Syed Nofel Talha' : c.label };
+  if (u.includes('linkedin.com')) return { kind: 'linkedin', handle: c.label === 'LinkedIn' ? (name || 'LinkedIn') : c.label };
   if (u.includes('instagram.com')) return { kind: 'instagram', handle: '@' + c.url.replace(/[?#].*$/, '').replace(/\/$/, '').split('/').pop() };
   if (u.includes('discord') || /^discord/i.test(c.label)) {
     // handle comes from the badge alt text, e.g. alt="Discord: d1abol1cal" → copy it on click
@@ -81,7 +81,7 @@ function matrixRain(canvas) {
 export function render(root, data) {
   const contacts = [...data.profile.contacts, ...CONFIG.extraContacts]
     .filter((c, i, a) => a.findIndex(x => x.url === c.url) === i)
-    .map(c => ({ ...c, ...classify(c) }));
+    .map(c => ({ ...c, ...classify(c, data.profile.name) }));
   contacts.push({ label: 'Résumé', url: CONFIG.resume, kind: 'resume', handle: 'resume.pdf' });
   const half = Math.ceil(contacts.length / 2);
   const cards = [contacts.slice(0, half), contacts.slice(half)];

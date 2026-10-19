@@ -231,6 +231,7 @@ async function renderRoute() {
 }
 
 function startSite() {
+  if (DATA && DATA.profile.name) document.title = `${CONFIG.username} | ${DATA.profile.name}`;
   const site = $('#site');
   site.hidden = false;
   requestAnimationFrame(() => site.classList.add('in'));

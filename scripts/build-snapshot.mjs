@@ -2,8 +2,9 @@
 // Run by .github/workflows/pages.yml every hour and on every push. Node 18+, no dependencies.
 //   node scripts/build-snapshot.mjs
 // Uses GITHUB_TOKEN when present (5,000 req/h); works unauthenticated too (60 req/h).
-import { writeFile, mkdir, rm } from 'node:fs/promises';
+import { writeFile, mkdir, rm, readFile } from 'node:fs/promises';
 import { CONFIG } from '../js/config.js';
+import { parseReadme } from '../js/github.js';
 
 const user = CONFIG.username;
 const headers = { 'User-Agent': `${user}-portfolio-snapshot`, Accept: 'application/vnd.github+json' };
@@ -65,3 +66,23 @@ const snapshot = { fetchedAt: new Date().toISOString(), user, readme, repos: rep
 await mkdir(new URL('../data/', import.meta.url), { recursive: true });
 await writeFile(new URL('../data/snapshot.json', import.meta.url), JSON.stringify(snapshot) + '\n');
 console.log(`snapshot: README ${(readme.length / 1024).toFixed(1)}KB · ${repos.length} repos · ${Object.keys(logos).length} logos · ${Object.keys(images).length} social previews · ${snapshot.fetchedAt}`);
+
+// In CI only: write the README's name + About text into index.html's <title> and link-preview tags, so search
+// engines and link previews (WhatsApp, LinkedIn, …) match the README. Done in the deploy copy, never committed.
+if (process.env.CI) {
+  const p = parseReadme(readme);
+  const attr = s => s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+  const title = attr(`${user} | ${p.name || user}`);
+  const about = (p.about[0] || p.roles.join(' · ') || '').trim();
+  const desc = attr(about.length > 200 ? about.slice(0, 197).replace(/\s+\S*$/, '') + '…' : about);
+  const file = new URL('../index.html', import.meta.url);
+  let html = await readFile(file, 'utf8');
+  html = html.replace(/<title>[^<]*<\/title>/, `<title>${title}</title>`);
+  if (desc) {
+    html = html.replace(/(<meta name="description" content=")[^"]*(")/, `$1${desc}$2`)
+               .replace(/(<meta property="og:description" content=")[^"]*(")/, `$1${desc}$2`);
+  }
+  html = html.replace(/(<meta property="og:title" content=")[^"]*(")/, `$1${title}$2`);
+  await writeFile(file, html);
+  console.log(`index.html: title + description set from README (${p.name})`);
+}
