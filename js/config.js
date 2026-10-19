@@ -20,8 +20,11 @@ export const CONFIG = {
   exclude: ['D1abol1cal', 'Nofel-Portfolio'],
   maxSphereRepos: 24,
 
-  // How long fetched data is reused within one browser session (ms)
-  cacheTtl: 10 * 60 * 1000,
+  // Visitors read data/snapshot.json, which the GitHub Action refreshes hourly.
+  // Only if that file is missing (e.g. local dev before the first Action run) does the
+  // browser go to GitHub directly; that live copy is reused for `cacheTtl` ms per session.
+  liveFallback: true,
+  cacheTtl: 60 * 60 * 1000,
 
   // ID card extras that GitHub doesn't hold
   operatorId: 'D1ABOL1CAL-2026',

@@ -104,11 +104,11 @@ export function mountSphere(container, repos, { onActive = () => {}, onMoving = 
     m.position.copy(p);
     m.lookAt(pts[i].clone().multiply(R * 2));
     m.setParent(globe);
-    // try the repo's own logo.png (CORS-enabled on raw.githubusercontent.com)
-    if (user && i < repos.length) {
+    // repo's own logo.png — only when the snapshot says it exists (no blind probing)
+    if (repo.logo && i < repos.length) {
       const img = new Image(); img.crossOrigin = 'anonymous';
-      img.onload = () => { const cv = tileCanvas(repo, img); items.forEach((r, j) => { if (r === repo) { tiles[j].tex.image = cv; } }); };
-      img.src = `https://raw.githubusercontent.com/${user}/${repo.name}/${repo.branch}/logo.png`;
+      img.onload = () => { const cv = tileCanvas(repo, img); items.forEach((r, j) => { if (r === repo && tiles[j]) tiles[j].tex.image = cv; }); };
+      img.src = repo.logo;
     }
     return { m, program, tex, base: pts[i], repo };
   });

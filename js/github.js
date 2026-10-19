@@ -1,5 +1,5 @@
 // Live content loader: profile README + repos from GitHub.
-// Falls back to a session cache, then to /data snapshots, so the site never renders empty.
+// Reads data/snapshot.json (kept fresh by the hourly GitHub Action); goes to GitHub directly only if that's missing.
 import { CONFIG } from './config.js';
 
 const CACHE_KEY = 'nt_gh_cache_v1';
@@ -159,35 +159,54 @@ function writeCache(readme, repos) {
   try { sessionStorage.setItem(CACHE_KEY, JSON.stringify({ t: Date.now(), readme, repos })); } catch (_) { /* ignore */ }
 }
 
+const ago = iso => {
+  const m = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 60000));
+  return m < 1 ? 'just now' : m < 60 ? `${m}m ago` : m < 2880 ? `${Math.round(m / 60)}h ago` : `${Math.round(m / 1440)}d ago`;
+};
+
 /**
  * Loads everything. `log(text, status)` streams progress lines to the boot terminal.
- * Resolves to { profile, repos, featured, live:boolean }.
+ * Order: 1) data/snapshot.json on this site (refreshed hourly by the GitHub Action — no API calls)
+ *        2) live GitHub, only if there is no snapshot (e.g. local dev before the first Action run)
+ * Resolves to { profile, repos, featured, source }.
  */
 export async function loadContent(log = () => {}) {
-  let readme = null, repos = null, live = true;
-  const cached = readCache();
+  let readme = null, repos = null, logos = {}, source = 'OFFLINE';
 
-  if (cached) {
-    readme = cached.readme; repos = cached.repos;
-    log('cache: session snapshot found', 'OK');
-  } else {
+  try {
     const t0 = performance.now();
-    const [rd, rp] = await Promise.allSettled([fetchReadme(), fetchRepos()]);
-    const ms = Math.round(performance.now() - t0);
-    if (rd.status === 'fulfilled') { readme = rd.value.txt; log(`GET ${rd.value.source}/README.md  ${(readme.length / 1024).toFixed(1)}KB ${ms}ms`, 'OK'); }
-    else log('GET README.md  ' + rd.reason.message, 'WARN');
-    if (rp.status === 'fulfilled' && Array.isArray(rp.value)) { repos = rp.value; log(`GET /users/${CONFIG.username}/repos  ${repos.length} found`, 'OK'); }
-    else log('GET /repos  ' + (rp.reason ? rp.reason.message : 'bad payload'), 'WARN');
-    if (readme && repos) writeCache(readme, repos);
+    const r = await fetch('data/snapshot.json', { cache: 'no-cache' });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const raw = await r.text(); const snap = JSON.parse(raw);
+    if (!snap.readme || !Array.isArray(snap.repos)) throw new Error('incomplete');
+    readme = snap.readme; repos = snap.repos; logos = snap.logos || {};
+    source = `SNAPSHOT · SYNCED ${ago(snap.fetchedAt).toUpperCase()}`;
+    log(`GET /data/snapshot.json  ${(raw.length / 1024).toFixed(1)}KB ${Math.round(performance.now() - t0)}ms`, 'OK');
+    log(`sync: github mirror ${ago(snap.fetchedAt)} · ${repos.length} repos`, 'OK');
+  } catch (e) {
+    log('snapshot unavailable (' + e.message + ')', 'WARN');
   }
 
-  if (!readme) { live = false; readme = await fetchText('data/readme-fallback.md').catch(() => ''); log('fallback: local README snapshot', 'OK'); }
-  if (!repos) { live = false; repos = await fetch('data/fallback.json').then(r => r.json()).catch(() => []); log('fallback: local repo snapshot', 'OK'); }
+  if ((!readme || !repos) && CONFIG.liveFallback) {
+    const cached = readCache();
+    if (cached) { readme = cached.readme; repos = cached.repos; source = 'LIVE · SESSION CACHE'; log('cache: session copy found', 'OK'); }
+    else {
+      const t0 = performance.now();
+      const [rd, rp] = await Promise.allSettled([fetchReadme(), fetchRepos()]);
+      const ms = Math.round(performance.now() - t0);
+      if (rd.status === 'fulfilled') { readme = rd.value.txt; log(`GET ${rd.value.source}/README.md  ${(readme.length / 1024).toFixed(1)}KB ${ms}ms`, 'OK'); }
+      else log('GET README.md  ' + rd.reason.message, 'WARN');
+      if (rp.status === 'fulfilled' && Array.isArray(rp.value)) { repos = rp.value; log(`GET /users/${CONFIG.username}/repos  ${repos.length} found`, 'OK'); }
+      else log('GET /repos  ' + (rp.reason ? rp.reason.message : 'bad payload'), 'WARN');
+      if (readme && repos) { writeCache(readme, repos); source = 'LIVE · GITHUB'; }
+    }
+  }
+  readme ||= ''; repos ||= [];
 
   const profile = parseReadme(readme);
   log(`parse: ${profile.sections} sections · ${profile.stack.reduce((n, g) => n + g.items.length, 0)} skills`, 'OK');
 
-  const list = selectRepos(repos, profile.featured);
+  const list = selectRepos(repos, profile.featured).map(r => ({ ...r, logo: logos[r.name] || '' }));
   // Flagship cards: README "Latest Projects" first, enriched with live repo stats; then topic-featured repos.
   const byName = Object.fromEntries(list.map(r => [r.name.toLowerCase(), r]));
   const featured = profile.featured.map(f => {
@@ -200,5 +219,5 @@ export async function loadContent(log = () => {}) {
     }
   }
   log(`mount /projects  ${list.length} repos · ${featured.length} flagship`, 'OK');
-  return { profile, repos: list, featured, live };
+  return { profile, repos: list, featured, source };
 }

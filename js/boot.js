@@ -88,7 +88,8 @@ export async function runBoot(term, load) {
   let loaderDone = false;
   const logs = (msg, status) => queue.push({ msg, status });
   const t0 = performance.now();
-  const loading = load(logs).then(r => { loaderDone = true; return r; }, e => { loaderDone = true; throw e; });
+  let tDone = 0;
+  const loading = load(logs).then(r => { loaderDone = true; tDone = performance.now(); return r; }, e => { loaderDone = true; tDone = performance.now(); throw e; });
 
   const head = [
     `USER // ${CONFIG.username.toUpperCase()}`,
@@ -104,7 +105,7 @@ export async function runBoot(term, load) {
   for (const p of probes) { add(`// > ${pad(p, 18)} OK`); await sleep(LINE_MS); }
   add(''); await sleep(LINE_MS);
 
-  await decrypt(add('', 'dim'), `// uplink github.com/${CONFIG.username} ...`);
+  await decrypt(add('', 'dim'), `// mount mirror of github.com/${CONFIG.username} ...`);
   // stream loader output until it's done
   while (!loaderDone || queue.length) {
     if (queue.length) {
@@ -115,13 +116,13 @@ export async function runBoot(term, load) {
   }
   let data;
   try { data = await loading; } catch (e) { data = null; }
-  const ping = Math.round(performance.now() - t0);
+  const ping = Math.round((tDone || performance.now()) - t0);
   add(''); await sleep(LINE_MS);
 
   const tail = [
     ['ENCRYPTION: TLS 1.3 · AES-256-GCM', true],
     [`LATENCY:    ${ping}ms ROUND-TRIP`, false],
-    [`SOURCE:     ${data && data.live ? 'LIVE · GITHUB' : 'LOCAL SNAPSHOT'}`, false],
+    [`SOURCE:     ${data ? data.source : 'OFFLINE'}`, false],
     ['UPTIME:     INFINITE', false],
   ];
   for (const [l, enc] of tail) { enc ? await decrypt(add(''), l) : add(l); await sleep(LINE_MS); }
