@@ -101,7 +101,7 @@ export async function runBoot(term, load) {
 
   await decrypt(add('', 'dim'), '// kernel probe...');
   add(''); await sleep(LINE_MS);
-  const probes = ['vulkan renderer', 'job scheduler', 'payment switch', 'riscv core'];
+  const probes = ['engine init', 'memory manager', 'event scheduler', 'failsafe handlers'];
   for (const p of probes) { add(`// > ${pad(p, 18)} OK`); await sleep(LINE_MS); }
   add(''); await sleep(LINE_MS);
 
