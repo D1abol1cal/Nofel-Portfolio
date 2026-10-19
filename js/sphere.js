@@ -129,25 +129,62 @@ export function mountSphere(container, repos, { onActive = () => {}, onMoving = 
   const wrapPi = a => Math.atan2(Math.sin(a), Math.cos(a));
   const setQ = () => { qy.fromAxisAngle(Y, yaw); qx.fromAxisAngle(X, pitch); q.multiply(qx, qy); };
 
+  const wp = new Vec3(), pc = new Vec3(), pe = new Vec3();
+
+  // screen-space pick: which visible tile is under (clientX, clientY)?
+  const pick = (cx, cy) => {
+    const r = gl.canvas.getBoundingClientRect();
+    const toPx = v => [(v.x + 1) / 2 * r.width, (1 - v.y) / 2 * r.height];
+    let hit = -1, hz = -Infinity;
+    tiles.forEach((t, i) => {
+      wp.copy(t.base).applyQuaternion(q);
+      if (wp.z < 0.1) return; // only the front hemisphere is clickable
+      const s = t.m.scale.x * 0.46;
+      pc.copy(wp).multiply(R); pe.copy(pc); pe.x += s;
+      camera.project(pc); camera.project(pe);
+      const [x, y] = toPx(pc), [ex] = toPx(pe);
+      const rad = Math.abs(ex - x) * 1.05;
+      if (Math.abs(cx - r.left - x) < rad && Math.abs(cy - r.top - y) < rad && wp.z > hz) { hz = wp.z; hit = i; }
+    });
+    return hit;
+  };
+  const snapTo = i => {
+    snapI = i; settling = true; vYaw = vPitch = 0;
+    if (active !== i) { active = -1; onMoving(true); }
+  };
+
+  let sx = 0, sy = 0, moved = false;
   const down = e => {
-    dragging = true; settling = false; snapI = -1; lx = e.clientX; ly = e.clientY; vYaw = vPitch = 0;
+    dragging = true; moved = false; sx = lx = e.clientX; sy = ly = e.clientY;
     gl.canvas.setPointerCapture(e.pointerId);
-    if (active !== -1) { active = -1; onMoving(true); }
   };
   const move = e => {
-    if (!dragging) return;
+    if (!dragging) { gl.canvas.style.cursor = pick(e.clientX, e.clientY) >= 0 ? 'pointer' : ''; return; }
+    if (!moved && Math.hypot(e.clientX - sx, e.clientY - sy) > 6) {
+      moved = true; settling = false; snapI = -1; vYaw = vPitch = 0;
+      if (active !== -1) { active = -1; onMoving(true); }
+    }
+    if (!moved) return;
     const dx = (e.clientX - lx) * 0.006, dy = (e.clientY - ly) * 0.006;
     lx = e.clientX; ly = e.clientY;
     vYaw = dx; vPitch = dy;
     yaw += dx; pitch = Math.max(-PMAX, Math.min(PMAX, pitch + dy));
   };
-  const up = () => { dragging = false; };
+  const up = e => {
+    if (!dragging) return;
+    dragging = false;
+    if (moved || e.type === 'pointercancel') return;
+    // a click, not a drag
+    const i = pick(e.clientX, e.clientY);
+    if (i < 0) return;
+    if (i === active) { const r = tiles[i].repo; window.open(r.homepage || r.url, '_blank', 'noopener'); }
+    else snapTo(i);
+  };
   gl.canvas.addEventListener('pointerdown', down);
   gl.canvas.addEventListener('pointermove', move);
   gl.canvas.addEventListener('pointerup', up);
   gl.canvas.addEventListener('pointercancel', up);
 
-  const wp = new Vec3();
   const frontMost = () => {
     let best = 0, bz = -Infinity;
     tiles.forEach((t, i) => { wp.copy(t.base).applyQuaternion(q); if (wp.z > bz) { bz = wp.z; best = i; } });
