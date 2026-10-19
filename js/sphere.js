@@ -39,7 +39,15 @@ function tileCanvas(repo, logo) {
   // grid
   x.strokeStyle = 'rgba(57,255,20,0.07)'; x.lineWidth = 1;
   for (let i = 0; i <= S; i += 32) { x.beginPath(); x.moveTo(i, 0); x.lineTo(i, S); x.stroke(); x.beginPath(); x.moveTo(0, i); x.lineTo(S, i); x.stroke(); }
-  if (logo) {
+  if (logo && logo.width / logo.height > 1.3) {
+    // wide image (e.g. a 2:1 social preview) → fill the top of the tile, cropped to cover
+    const W = S, H = 360, r = Math.max(W / logo.width, H / logo.height);
+    const w = logo.width * r, h = logo.height * r;
+    x.save(); x.beginPath(); x.rect(0, 0, W, H); x.clip();
+    x.drawImage(logo, (W - w) / 2, (H - h) / 2, w, h); x.restore();
+    const g = x.createLinearGradient(0, H - 90, 0, H); g.addColorStop(0, 'rgba(6,10,6,0)'); g.addColorStop(1, 'rgba(6,10,6,1)');
+    x.fillStyle = g; x.fillRect(0, H - 90, W, 90);
+  } else if (logo) {
     const r = Math.min(300 / logo.width, 300 / logo.height);
     const w = logo.width * r, h = logo.height * r;
     x.drawImage(logo, (S - w) / 2, 48 + (300 - h) / 2, w, h);

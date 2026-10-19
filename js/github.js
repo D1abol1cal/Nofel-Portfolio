@@ -171,7 +171,7 @@ const ago = iso => {
  * Resolves to { profile, repos, featured, source }.
  */
 export async function loadContent(log = () => {}) {
-  let readme = null, repos = null, logos = {}, source = 'OFFLINE';
+  let readme = null, repos = null, logos = {}, images = {}, source = 'OFFLINE';
 
   try {
     const t0 = performance.now();
@@ -179,7 +179,7 @@ export async function loadContent(log = () => {}) {
     if (!r.ok) throw new Error('HTTP ' + r.status);
     const raw = await r.text(); const snap = JSON.parse(raw);
     if (!snap.readme || !Array.isArray(snap.repos)) throw new Error('incomplete');
-    readme = snap.readme; repos = snap.repos; logos = snap.logos || {};
+    readme = snap.readme; repos = snap.repos; logos = snap.logos || {}; images = snap.images || {};
     source = `SNAPSHOT · SYNCED ${ago(snap.fetchedAt).toUpperCase()}`;
     log(`GET /data/snapshot.json  ${(raw.length / 1024).toFixed(1)}KB ${Math.round(performance.now() - t0)}ms`, 'OK');
     log(`sync: github mirror ${ago(snap.fetchedAt)} · ${repos.length} repos`, 'OK');
@@ -206,7 +206,7 @@ export async function loadContent(log = () => {}) {
   const profile = parseReadme(readme);
   log(`parse: ${profile.sections} sections · ${profile.stack.reduce((n, g) => n + g.items.length, 0)} skills`, 'OK');
 
-  const list = selectRepos(repos, profile.featured).map(r => ({ ...r, logo: logos[r.name] || '' }));
+  const list = selectRepos(repos, profile.featured).map(r => ({ ...r, logo: logos[r.name] || images[r.name] || '' })); // logo.png wins over the social preview
   // Flagship cards: README "Latest Projects" first, enriched with live repo stats; then topic-featured repos.
   const byName = Object.fromEntries(list.map(r => [r.name.toLowerCase(), r]));
   const featured = profile.featured.map(f => {
