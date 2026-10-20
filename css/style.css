@@ -257,9 +257,10 @@ button { font: inherit; }
 .fc-topics span { padding: 2px 7px; border: 1px solid #ffffff1a; border-radius: 3px; font-size: 11.5px; color: var(--soft); }
 .fc-link { font-size: 12.5px; color: var(--g); }
 
-.sphere-stage { position: relative; flex: 1; min-height: 620px; margin: 0 -24px; }
+.sphere-stage { position: relative; flex: 1; min-height: 520px; margin: 0 -24px; }
 .sphere-mount { position: absolute; inset: 0; }
 .sphere-canvas { width: 100% !important; height: 100% !important; display: block; cursor: grab; touch-action: none; }
+@media (pointer: coarse) { .sphere-canvas { touch-action: pan-y; } } /* phones: vertical swipes scroll the page */
 .sphere-canvas:active { cursor: grabbing; }
 .sphere-info { position: absolute; inset: 0; pointer-events: none; display: flex; justify-content: space-between; align-items: center; padding: 0 4vw; gap: 30vw; transition: opacity .35s; }
 .si-title { margin: 0; max-width: 24vw; font-size: clamp(1.4rem, 3.2vw, 2.6rem); line-height: 1.15; color: #fff; overflow-wrap: anywhere; text-shadow: 0 2px 12px #000; }
@@ -380,7 +381,7 @@ button { font: inherit; }
   .hl-grid { grid-template-columns: 1fr; }
   .flagship-grid { grid-template-columns: 1fr; }
   .page-projects { padding: 52px 16px 110px; }
-  .sphere-stage { min-height: 520px; margin: 0 -16px; }
+  .sphere-stage { min-height: 480px; margin: 0 -16px; }
   .profile-card { width: min(360px, calc(100vw - 32px)); height: auto; min-height: 560px; gap: 18px; }
   .pc-avatar { height: 230px; }
   .about-text { font-size: 14px; }
@@ -390,9 +391,16 @@ button { font: inherit; }
   .pv-bar { justify-content: center; }
   .rl-filter { width: 100%; }
   .rl-filter input { width: 100%; }
-  .mute-btn { bottom: 88px; right: 12px; }
-  .music-picker { bottom: 140px; right: 12px; }
-  .music-panel { right: 0; bottom: 54px; width: min(268px, calc(100vw - 24px)); }
+  /* phones: music + mute live in the top bar next to the clock, off the content */
+  .clock { top: 31px; right: 10px; }
+  .mute-btn { top: 29px; bottom: auto; right: 98px; width: 34px; height: 34px; }
+  .music-picker { top: 29px; bottom: auto; right: 138px; }
+  .music-btn { width: 34px; height: 34px; }
+  .music-panel { right: -98px; bottom: auto; top: 42px; width: min(268px, calc(100vw - 20px)); }
+  .about-name { font-size: clamp(22px, 7vw, 28px); letter-spacing: .06em; }
+  .about-role { font-size: 14px; }
+  .page { padding-top: 70px; }
+  .page-projects { padding-top: 70px; }
   .dock-panel { gap: 10px; }
   .hint-dock { width: calc(100vw - 32px); }
 }
