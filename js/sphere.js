@@ -124,7 +124,7 @@ export function mountSphere(container, repos, { onActive = () => {}, onMoving = 
   const resize = () => {
     renderer.setSize(container.clientWidth, container.clientHeight);
     camera.perspective({ aspect: gl.canvas.width / gl.canvas.height });
-    camera.position.z = container.clientWidth < 640 ? 11.5 : 9.5;
+    camera.position.z = container.clientWidth < 640 ? 10.2 : 8.4; // closer camera = bigger sphere
   };
   const ro = new ResizeObserver(resize); ro.observe(container); resize();
 

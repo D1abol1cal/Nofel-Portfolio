@@ -35,34 +35,36 @@ export function render(root, data, { projectsHint }) {
         </a>`).join('')}
     </section>` : ''}
 
-    <div class="view-toggle" role="tablist" aria-label="Projects view">
-      <button type="button" role="tab" data-view="sphere">sphere</button>
-      <button type="button" role="tab" data-view="list">list</button>
+    <div class="pv-bar">
+      <div class="pv-tabs" role="tablist" aria-label="Projects view">
+        <button type="button" role="tab" data-view="sphere"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><ellipse cx="12" cy="12" rx="4" ry="9"/><path d="M3 12h18"/></svg>sphere</button>
+        <button type="button" role="tab" data-view="list"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7.5" height="7.5" rx="1.5"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="1.5"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="1.5"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="1.5"/></svg>list</button>
+      </div>
+      <label class="rl-filter" hidden><span class="sr-only">Filter projects</span>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+        <input type="text" placeholder="filter by name, language, topic" autocomplete="off" spellcheck="false">
+      </label>
     </div>
 
-    <section class="repo-list" aria-label="All repositories (list)" hidden>
-      <div class="rl-head">
-        <h2><span class="prompt">$</span> ls ~/projects</h2>
-        <label class="rl-filter"><span class="sr-only">Filter projects</span>
-          <span class="prompt" aria-hidden="true">grep</span><input type="search" placeholder="name, language or topic" autocomplete="off" spellcheck="false">
-        </label>
-      </div>
-      <ul class="rl-rows">
-        ${data.repos.map(r => `
-        <li class="rl-row" data-q="${esc([r.name, r.desc, r.lang, ...r.topics].join(' ').toLowerCase())}">
-          <a class="rl-link" href="${esc(r.url)}" target="_blank" rel="noopener">
-            <span class="rl-name">${esc(r.name)}${r.featured ? ' <span class="rl-star" title="featured">featured</span>' : ''}</span>
-            <span class="rl-meta">
-              ${r.lang ? `<span class="rl-lang"><i style="background:${langColor(r.lang)}"></i>${esc(r.lang)}</span>` : ''}
-              <span>★ ${r.stars}</span>
-              <span>${esc(ago(r.pushed))}</span>
+    <section class="repo-list" aria-label="All repositories" hidden>
+      <ul class="rl-grid">
+        ${data.repos.map(r => {
+          const topics = r.topics.filter(t => t !== CONFIG.topicShow && t !== CONFIG.topicFeatured);
+          return `
+        <li class="rl-item" data-q="${esc([r.name, r.desc, r.lang, ...topics].join(' ').toLowerCase())}">
+          <a class="rl-card" href="${esc(r.url)}" target="_blank" rel="noopener">
+            <span class="rl-top">
+              <span class="rl-lang">${r.lang ? `<i style="background:${langColor(r.lang)}"></i>${esc(r.lang)}` : '<i></i>repo'}</span>
+              ${r.featured ? '<span class="rl-feat">featured</span>' : ''}
             </span>
-            ${r.desc ? `<span class="rl-desc">${esc(r.desc)}</span>` : ''}
-            ${r.topics.filter(t => t !== CONFIG.topicShow && t !== CONFIG.topicFeatured).length ? `<span class="rl-topics">${r.topics.filter(t => t !== CONFIG.topicShow && t !== CONFIG.topicFeatured).slice(0, 6).map(t => `<span>#${esc(t)}</span>`).join('')}</span>` : ''}
+            <span class="rl-name">${esc(r.name)}</span>
+            <span class="rl-desc">${esc(r.desc || 'No description yet.')}</span>
+            ${topics.length ? `<span class="rl-topics">${topics.slice(0, 3).map(t => `<span>#${esc(t)}</span>`).join('')}</span>` : ''}
+            <span class="rl-foot"><span>★ ${r.stars}</span><span>updated ${esc(ago(r.pushed))}</span><span class="rl-go" aria-hidden="true">↗</span></span>
           </a>
-        </li>`).join('')}
+        </li>`; }).join('')}
       </ul>
-      <p class="rl-empty" hidden>no matches</p>
+      <p class="rl-empty" hidden>// no projects match that filter</p>
     </section>
 
     <section class="sphere-stage" aria-label="All repositories">
@@ -100,11 +102,11 @@ export function render(root, data, { projectsHint }) {
   };
 
   // sphere ⇄ list toggle (remembered per browser)
-  const list = root.querySelector('.repo-list');
-  const btns = [...root.querySelectorAll('.view-toggle button')];
+  const list = root.querySelector('.repo-list'), filterBox = root.querySelector('.rl-filter');
+  const btns = [...root.querySelectorAll('.pv-tabs button')];
   const show = v => {
     btns.forEach(b => { const on = b.dataset.view === v; b.classList.toggle('active', on); b.setAttribute('aria-selected', String(on)); });
-    list.hidden = v !== 'list'; stage.hidden = v !== 'sphere';
+    list.hidden = v !== 'list'; stage.hidden = v !== 'sphere'; filterBox.hidden = v !== 'list';
     if (v === 'sphere') startSphere();
     else if (stopSphere) { stopSphere(); stopSphere = null; stage.classList.remove('has-gl'); }
     try { localStorage.setItem(VIEW_KEY, v); } catch (_) {}
@@ -115,7 +117,7 @@ export function render(root, data, { projectsHint }) {
   show(initial);
 
   // list filter
-  const input = list.querySelector('input'), rows = [...list.querySelectorAll('.rl-row')], empty = list.querySelector('.rl-empty');
+  const input = filterBox.querySelector('input'), rows = [...list.querySelectorAll('.rl-item')], empty = list.querySelector('.rl-empty');
   input.addEventListener('input', () => {
     const q = input.value.trim().toLowerCase();
     let n = 0;
